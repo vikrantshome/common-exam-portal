@@ -1,0 +1,25 @@
+# Database
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# Node
+node_modules/
+.npm/
+
+# OS
+.DS_Store
+
+# Next.js
+.next/
+out/
+build/
+.vercel/
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
