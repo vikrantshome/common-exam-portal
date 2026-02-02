@@ -11,7 +11,7 @@ node_modules/
 # OS
 .DS_Store
 
-# Next.js
+# Next.js (if at root, but also good generally)
 .next/
 out/
 build/

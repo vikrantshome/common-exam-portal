@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  mobile    String   @unique
+  password  String? // Optional for now if using OTP/Magic links
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  profile   Profile?
+  documents Document[]
+}
+
+model Profile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Personal Details
+  firstName   String
+  lastName    String?
+  dob         DateTime?
+  gender      String?
+  category    String? // Gen, OBC, SC, ST
+  aadharNo    String?
+  fatherName  String?
+  motherName  String?
+  
+  // Contact Details
+  address     String?
+  city        String?
+  state       String?
+  pincode     String?
+  
+  // Academic Details - Class 10
+  class10Board      String?
+  class10School     String?
+  class10Percentage Float?
+  class10Year       Int?
+  class10RollNo     String?
+  
+  // Academic Details - Class 12
+  class12Board      String?
+  class12School     String?
+  class12Status     String? // Appearing, Passed
+  class12Stream     String? // PCM, PCB, PCMB
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Exam {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  code        String   @unique // JEE_MAIN, NEET, etc.
+  description String?
+  examDate    DateTime?
+  regStartDate DateTime?
+  regEndDate   DateTime?
+  officialUrl String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // PHOTO, SIGNATURE, AADHAR, MARKSHEET_10, MARKSHEET_12, CATEGORY_CERT
+  url       String
+  mimeType  String?
+  size      Int?     // in bytes
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
