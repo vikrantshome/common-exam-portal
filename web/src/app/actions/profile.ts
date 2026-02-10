@@ -8,16 +8,33 @@ import { revalidatePath } from "next/cache";
 const personalDetailsSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().optional(),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   dob: z.string().optional(), // Receive as string YYYY-MM-DD
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   category: z.enum(["GEN", "OBC", "SC", "ST", "EWS"]).optional(),
   aadharNo: z.string().length(12, "Aadhar must be 12 digits").optional().or(z.literal("")),
   fatherName: z.string().optional(),
   motherName: z.string().optional(),
-  address: z.string().optional(),
+  
+  // Contact Details (Present)
+  addressLine1: z.string().optional(),
+  addressLine2: z.string().optional(),
   city: z.string().optional(),
+  district: z.string().optional(),
   state: z.string().optional(),
+  country: z.string().optional(),
   pincode: z.string().length(6, "Pincode must be 6 digits").optional().or(z.literal("")),
+  alternateMobile: z.string().optional(),
+
+  // Contact Details (Permanent)
+  sameAsPresent: z.string().optional(), // Checkbox sends "true" string
+  permAddressLine1: z.string().optional(),
+  permAddressLine2: z.string().optional(),
+  permCity: z.string().optional(),
+  permDistrict: z.string().optional(),
+  permState: z.string().optional(),
+  permCountry: z.string().optional(),
+  permPincode: z.string().length(6, "Pincode must be 6 digits").optional().or(z.literal("")),
 });
 
 const academicDetailsSchema = z.object({
@@ -37,6 +54,7 @@ export type ProfileState = {
   message?: string;
   errors?: {
     firstName?: string[];
+    email?: string[];
     dob?: string[];
     aadharNo?: string[];
     pincode?: string[];
@@ -64,6 +82,7 @@ export async function updatePersonalDetails(prevState: ProfileState, formData: F
   const data = result.data;
 
   try {
+    // Update Profile
     await prisma.profile.update({
       where: { userId: session.userId },
       data: {
@@ -75,12 +94,36 @@ export async function updatePersonalDetails(prevState: ProfileState, formData: F
         aadharNo: data.aadharNo || null,
         fatherName: data.fatherName,
         motherName: data.motherName,
-        address: data.address,
+        
+        // Present
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2,
         city: data.city,
+        district: data.district,
         state: data.state,
+        country: data.country,
         pincode: data.pincode || null,
+        alternateMobile: data.alternateMobile,
+
+        // Permanent
+        sameAsPresent: data.sameAsPresent === "true",
+        permAddressLine1: data.permAddressLine1,
+        permAddressLine2: data.permAddressLine2,
+        permCity: data.permCity,
+        permDistrict: data.permDistrict,
+        permState: data.permState,
+        permCountry: data.permCountry,
+        permPincode: data.permPincode || null,
       },
     });
+
+    // Update User Email if provided
+    if (data.email) {
+      await prisma.user.update({
+        where: { id: session.userId },
+        data: { email: data.email },
+      });
+    }
 
     revalidatePath("/dashboard");
     revalidatePath("/profile/personal");
