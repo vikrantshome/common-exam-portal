@@ -37,11 +37,25 @@ model Profile {
   fatherName  String?
   motherName  String?
   
-  // Contact Details
-  address     String?
+  // Contact Details (Present)
+  addressLine1 String?  // Premises No / Name
+  addressLine2 String?  // Locality / Sub-Locality
   city        String?
+  district    String?
   state       String?
+  country     String?   @default("India")
   pincode     String?
+  alternateMobile String?
+
+  // Contact Details (Permanent)
+  sameAsPresent Boolean @default(true)
+  permAddressLine1 String?
+  permAddressLine2 String?
+  permCity        String?
+  permDistrict    String?
+  permState       String?
+  permCountry     String?   @default("India")
+  permPincode     String?
   
   // Academic Details - Class 10
   class10Board      String?
