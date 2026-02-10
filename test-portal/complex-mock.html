@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex UI Mock (React-Select Simulation)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        
+        /* Simulating React-Select Styles */
+        .css-container {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 2px 8px;
+            display: flex;
+            align-items: center;
+            cursor: text;
+            position: relative;
+        }
+        .css-control { flex: 1; display: flex; }
+        .css-input { border: none; outline: none; width: 100%; }
+        .css-menu {
+            position: absolute; top: 100%; left: 0; right: 0;
+            border: 1px solid #ccc; background: white; z-index: 10;
+            display: none;
+        }
+        .css-menu.open { display: block; }
+        .css-option { padding: 8px; cursor: pointer; }
+        .css-option:hover { background: #f0f0f0; }
+        
+        .debug-value { font-family: monospace; font-size: 12px; color: #666; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Complex Form Mock</h1>
+    <p>This simulates a form where fields are not standard &lt;select&gt; elements.</p>
+
+    <!-- 1. Standard Input (Control) -->
+    <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input id="fullName" name="fullName" type="text" />
+    </div>
+
+    <!-- 2. Simulated React-Select (Category) -->
+    <div class="form-group" id="category-wrapper">
+        <label id="lbl-category">Category (Complex)</label>
+        
+        <!-- The "Real" value form submission uses -->
+        <input type="hidden" name="category" id="category-hidden" value="" />
+
+        <!-- The Visual UI -->
+        <div class="css-container" onclick="toggleMenu('category')">
+            <div class="css-control">
+                <!-- The Input user types into -->
+                <input type="text" 
+                       id="category-input" 
+                       class="css-input" 
+                       role="combobox" 
+                       aria-autocomplete="list" 
+                       aria-expanded="false" 
+                       aria-controls="category-listbox"
+                       placeholder="Select..." 
+                       readonly 
+                />
+            </div>
+            <!-- The Dropdown -->
+            <div class="css-menu" id="category-menu">
+                <div class="css-option" onclick="selectOption('category', 'OPEN', 'Open General')">Open General</div>
+                <div class="css-option" onclick="selectOption('category', 'SC', 'Scheduled Caste')">Scheduled Caste</div>
+                <div class="css-option" onclick="selectOption('category', 'OBC', 'Other Backward Class')">Other Backward Class</div>
+            </div>
+        </div>
+        <div class="debug-value">Hidden Value: <span id="category-debug"></span></div>
+    </div>
+
+    <script>
+        function toggleMenu(id) {
+            const menu = document.getElementById(id + '-menu');
+            menu.classList.toggle('open');
+            const input = document.getElementById(id + '-input');
+            input.setAttribute('aria-expanded', menu.classList.contains('open'));
+        }
+
+        function selectOption(id, value, label) {
+            // Update Visual
+            document.getElementById(id + '-input').value = label;
+            // Update Hidden (Real Data)
+            document.getElementById(id + '-hidden').value = value;
+            document.getElementById(id + '-debug').innerText = value;
+            // Close Menu
+            document.getElementById(id + '-menu').classList.remove('open');
+            event.stopPropagation(); // Prevent re-opening
+        }
+    </script>
+</body>
+</html>

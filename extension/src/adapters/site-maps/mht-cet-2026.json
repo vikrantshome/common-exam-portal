@@ -1,0 +1,59 @@
+{
+  "fields": [
+    {
+      "selector": "input[name=\"CandidateName\"]",
+      "source": "profile.firstName",
+      "confidence": 1,
+      "reason": "Label clearly indicates father's name."
+    },
+    {
+      "selector": "input[name=\"FatherName\"]",
+      "source": "profile.fatherName",
+      "confidence": 1,
+      "reason": "Label clearly indicates father's name."
+    },
+    {
+      "selector": "input[name=\"MotherName\"]",
+      "source": "profile.motherName",
+      "confidence": 1,
+      "reason": "Label clearly indicates mother's name."
+    },
+    {
+      "selector": "input[name=\"Gender\"]",
+      "source": "profile.gender",
+      "confidence": 0.9,
+      "reason": "Input name 'Gender' and label 'Male' indicate the gender field.",
+      "mapping": {
+        "MALE": "M",
+        "FEMALE": "F",
+        "OTHER": "O"
+      }
+    },
+    {
+      "selector": "input[name=\"DOB\"]",
+      "source": "profile.dob",
+      "confidence": 1,
+      "reason": "Label clearly indicates date of birth.",
+      "format": "YYYY-MM-DD"
+    },
+    {
+      "selector": "input[name=\"MobileNo\"]",
+      "source": "user.mobile",
+      "confidence": 1,
+      "reason": "Label clearly indicates mobile number."
+    },
+    {
+      "selector": "select[name=\"Category\"]",
+      "source": "profile.category",
+      "confidence": 1,
+      "reason": "Label and options clearly indicate category.",
+      "mapping": {
+        "GEN": "OPEN",
+        "OBC": "OBC",
+        "SC": "SC",
+        "ST": "ST",
+        "EWS": "EWS"
+      }
+    }
+  ]
+}

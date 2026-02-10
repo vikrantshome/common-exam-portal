@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "UniApply Smart Assistant",
+  "version": "1.0.0",
+  "description": "Auto-fill exam forms using your UniApply Master Profile.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "sidePanel",
+    "storage",
+    "cookies"
+  ],
+  "host_permissions": [
+    "http://localhost:3001/*",
+    "https://uniapply.com/*",
+    "*://*.mahacet.org/*",
+    "*://*.maharashtracet.org/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "action": {
+    "default_title": "Open Assistant"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.mahacet.org/*",
+        "*://*.maharashtracet.org/*",
+        "http://localhost/*",
+        "http://localhost:8080/*",
+        "http://127.0.0.1/*",
+        "file:///*"
+      ],
+      "js": ["src/content.js"],
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
