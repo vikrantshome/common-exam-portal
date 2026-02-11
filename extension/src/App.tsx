@@ -1,103 +1,82 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
-import { Mapper } from './components/Mapper';
 import './App.css';
+
+type AppStatus = 'idle' | 'filling' | 'success' | 'error';
 
 function App() {
   const { profile, loading, isAuthenticated, checkAuth } = useAuth();
-  const [devMode, setDevMode] = useState(false);
+  const [status, setStatus] = useState<AppStatus>('idle');
+  const [currentUrl, setCurrentUrl] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
+
+  useEffect(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.url) {
+        setCurrentUrl(tabs[0].url);
+      }
+    });
+  }, []);
 
   const handleLogin = () => {
     chrome.tabs.create({ url: "http://localhost:3001/login" });
   };
 
+  const handleDashboard = () => {
+    chrome.tabs.create({ url: "http://localhost:3001/dashboard" });
+  };
+
+  const isSupportedSite = () => {
+    // Simple heuristic for now, or check if we injected content script
+    // Real implementation would match against a list of domains
+    return true; 
+    // return currentUrl.includes('nic.in') || currentUrl.includes('nta.ac.in') || currentUrl.includes('mahacet.org') || currentUrl.includes('localhost');
+  };
+
   const handleAutoFill = () => {
-    console.log("Auto-Fill clicked");
+    setStatus('filling');
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0];
-      if (!activeTab?.id) {
-        console.error("No active tab found");
-        return;
-      }
+      if (!activeTab?.id) return;
 
       const tabId = activeTab.id;
-      const message = { action: "FILL_FORM", data: profile };
+      const payload = { action: "FILL_FORM", data: profile };
 
-      console.log("Sending message to tab ID:", tabId);
-      
-      chrome.tabs.sendMessage(tabId, message, (response) => {
+      chrome.tabs.sendMessage(tabId, payload, (response) => {
         if (chrome.runtime.lastError) {
-          console.warn("Message failed:", chrome.runtime.lastError.message);
-          console.log("Attempting programmatic injection...");
-
+          // Injection fallback
           chrome.scripting.executeScript({
             target: { tabId },
             files: ['src/content.js']
           }).then(() => {
-            console.log("Injection successful. Retrying message...");
             setTimeout(() => {
-              chrome.tabs.sendMessage(tabId, message, (resp) => {
-                if (chrome.runtime.lastError) {
-                  console.error("Retry failed:", chrome.runtime.lastError.message);
-                } else {
-                  console.log("Retry response:", resp);
-                }
+              chrome.tabs.sendMessage(tabId, payload, (resp) => {
+                 if (chrome.runtime.lastError) {
+                     setStatus('error');
+                     setMessage("Could not connect to page. Refresh and try again.");
+                 } else {
+                     setStatus('success');
+                     setMessage("Form filled successfully!");
+                 }
               });
-            }, 100);
-          }).catch((err) => {
-            console.error("Injection failed:", err);
+            }, 500);
+          }).catch(() => {
+             setStatus('error');
+             setMessage("Injection failed.");
           });
-
         } else {
-          console.log("Message response:", response);
+          setStatus('success');
+          setMessage("Form filled successfully!");
         }
       });
     });
   };
 
-  const handleInspect = () => {
-    // Legacy Inspector - kept for quick debug
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const activeTab = tabs[0];
-      if (activeTab?.id) {
-        chrome.scripting.executeScript({
-          target: { tabId: activeTab.id },
-          func: () => {
-            console.group("UniApply Form Inspector");
-            const inputs = document.querySelectorAll("input, select, textarea");
-            const report = Array.from(inputs).map((el: any) => ({
-              tag: el.tagName,
-              type: el.type,
-              id: el.id,
-              name: el.name,
-              class: el.className,
-              placeholder: el.placeholder,
-              label: el.labels?.[0]?.innerText || "No Label"
-            }));
-            console.table(report);
-            console.log("JSON Report:", JSON.stringify(report, null, 2));
-            console.groupEnd();
-            alert("Form details logged to Console (F12)");
-          }
-        });
-      }
-    });
-  };
-
   if (loading) {
-    return <div className="container">Loading UniApply...</div>;
-  }
-
-  // If in Dev Mode, show Mapper Interface regardless of auth (mostly)
-  if (devMode) {
     return (
-      <div className="container">
-        <Mapper />
-        <div className="footer" style={{ marginTop: '16px' }}>
-          <label>
-            <input type="checkbox" checked={devMode} onChange={(e) => setDevMode(e.target.checked)} />
-            Dev Mode
-          </label>
+      <div className="layout">
+        <div className="content">
+          <div className="loader"></div>
         </div>
       </div>
     );
@@ -105,54 +84,84 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <div className="container">
-        <h1>UniApply</h1>
-        <p>Please login to your account to use the assistant.</p>
-        <button onClick={handleLogin}>Login</button>
-        <button className="secondary" onClick={checkAuth}>Refresh Status</button>
-        
-        <div className="footer" style={{ marginTop: '24px' }}>
-          <label style={{ fontSize: '10px', color: '#ccc' }}>
-            <input type="checkbox" checked={devMode} onChange={(e) => setDevMode(e.target.checked)} />
-            Dev Mode
-          </label>
+      <div className="layout">
+        <div className="header">
+          <div className="logo">
+            <div className="logo-icon">U</div>
+            UniApply
+          </div>
+        </div>
+        <div className="content">
+          <p className="empty-state">Please login to access your master profile.</p>
+          <button className="btn btn-primary" onClick={handleLogin}>Login / Signup</button>
+          <button className="btn btn-secondary" onClick={checkAuth}>Refresh Status</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container">
+    <div className="layout">
       <div className="header">
-        <h1>UniApply</h1>
-        <span className="badge">Active</span>
+        <div className="logo">
+          <div className="logo-icon">U</div>
+          UniApply
+        </div>
+        <div className="status-badge">
+          <span className="status-dot"></span>
+          Connected
+        </div>
       </div>
       
-      <div className="card">
-        <h2>{profile?.profile.firstName} {profile?.profile.lastName}</h2>
-        <p>DOB: {profile?.profile.dob ? new Date(profile?.profile.dob).toLocaleDateString() : 'N/A'}</p>
-        <p>Docs: {profile?.documents.length}</p>
-      </div>
+      <div className="content">
+        {status === 'success' ? (
+           <div className="success-message">
+              <span style={{ fontSize: '24px' }}>🎉</span>
+              <div>
+                  <div>Success!</div>
+                  <div style={{fontSize: '12px', color: '#64748b', fontWeight: 'normal'}}>Fields auto-filled.</div>
+              </div>
+           </div>
+        ) : (
+           <div className="card">
+            <h2>{profile?.profile.firstName} {profile?.profile.lastName}</h2>
+            <p>DOB: {profile?.profile.dob ? new Date(profile?.profile.dob).toLocaleDateString() : 'N/A'}</p>
+            <p style={{marginTop: '4px'}}>Documents Ready: {profile?.documents.length}</p>
+          </div>
+        )}
 
-      <div className="actions">
-        <button className="primary" onClick={handleAutoFill}>
-          Auto-Fill This Form
-        </button>
-      </div>
+        {isSupportedSite() ? (
+            <button 
+                className="btn btn-primary" 
+                onClick={handleAutoFill}
+                disabled={status === 'filling'}
+            >
+                {status === 'filling' ? (
+                    <>
+                        <div className="loader"></div>
+                        Filling...
+                    </>
+                ) : (
+                    status === 'success' ? 'Fill Again' : 'Auto-Fill Form'
+                )}
+            </button>
+        ) : (
+            <p className="empty-state">
+                Navigate to a supported exam portal to use auto-fill.
+            </p>
+        )}
 
-      <div className="dev-tools" style={{ display: 'none' }}>
-        <h3>Developer Tools</h3>
-        <button className="secondary" onClick={handleInspect}>
-          Inspect Page Forms
+        {message && status === 'error' && (
+            <p style={{color: '#ef4444', fontSize: '12px', marginTop: '12px'}}>{message}</p>
+        )}
+
+        <button className="btn btn-secondary" onClick={handleDashboard}>
+            Open Dashboard
         </button>
       </div>
       
       <div className="footer">
-        <p>Target: MHT CET 2026</p>
-        <label style={{ fontSize: '10px', color: '#ccc', display: 'block', marginTop: '8px' }}>
-          <input type="checkbox" checked={devMode} onChange={(e) => setDevMode(e.target.checked)} />
-          Dev Mode
-        </label>
+        UniApply India • v0.1.0
       </div>
     </div>
   );
