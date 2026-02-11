@@ -8,7 +8,7 @@ Launch a professional, trustworthy public face for UniApply India to convert vis
 ### 1. Landing Page (`web/src/app/page.tsx`)
 - **Hero Section:** High-conversion copy ("Don't Type. Just Apply") with clear CTAs.
 - **Features Section:** Highlights Auto-Fill, Privacy, and Exam Support.
-- **Navbar & Footer:** Fully responsive navigation structure.
+- **Navbar & Footer:** Fully responsive navigation structure (Pricing removed).
 
 ### 2. Exam Directory (`web/src/app/exams/`)
 - **Directory Page:** Lists all supported exams dynamically fetched from the database.
