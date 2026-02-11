@@ -36,17 +36,17 @@ async function getUpcomingExams() {
 
 export default async function DashboardPage() {
   const session = await verifySession();
-  if (!session) redirect("/login");
+  if (!session) redirect("/api/auth/clear-session");
 
   const { profile, documentCount } = await getUserData(session.userId);
   const upcomingExams = await getUpcomingExams();
 
   // Calculate completion percentage logic
   let completionPercentage = 20; // Basic details (onboarding) exist
-  if (profile?.dob && profile?.aadharNo) completionPercentage += 20;
-  if (profile?.address) completionPercentage += 10;
-  if (profile?.class10Board) completionPercentage += 25; // Academic
-  if (documentCount > 0) completionPercentage += 25; // Documents
+  if (profile?.dob && profile?.aadharNo && profile?.gender && profile?.category) completionPercentage += 20;
+  if (profile?.addressLine1 && profile?.city && profile?.state && profile?.pincode) completionPercentage += 15;
+  if (profile?.class10Board && profile?.class10Year) completionPercentage += 20; // Academic
+  if (documentCount >= 2) completionPercentage += 25; // Documents (Photo + Sig)
   
   if (completionPercentage > 100) completionPercentage = 100;
 
@@ -57,6 +57,20 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground">
           Welcome back, {profile?.firstName || "Student"}! Here's your exam application status.
         </p>
+      </div>
+
+      {/* Banner for Extension */}
+      <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+             <div className="bg-indigo-600 p-2 rounded-full text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+             </div>
+             <div>
+                <h3 className="font-semibold text-indigo-900">Get the UniApply Extension</h3>
+                <p className="text-sm text-indigo-700">Auto-fill your forms on official portals instantly.</p>
+             </div>
+          </div>
+          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">Download Now</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -145,6 +159,22 @@ export default async function DashboardPage() {
             
             <div className="flex items-center justify-between border-b pb-4">
               <div className="space-y-1">
+                <p className="font-medium">Contact & Address</p>
+                <p className="text-sm text-muted-foreground">Address, State, District</p>
+              </div>
+              <div className="flex items-center">
+                {profile?.addressLine1 && profile?.state ? (
+                   <span className="text-green-600 text-sm font-medium">Completed</span>
+                ) : (
+                   <Button variant="outline" size="sm" asChild>
+                     <Link href="/profile/personal">Fill Now</Link>
+                   </Button>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between border-b pb-4">
+              <div className="space-y-1">
                 <p className="font-medium">Academic Records</p>
                 <p className="text-sm text-muted-foreground">Class 10 & 12 Marks</p>
               </div>
@@ -195,7 +225,10 @@ export default async function DashboardPage() {
                       <p className="text-sm font-medium leading-none">{exam.name}</p>
                       <p className="text-sm text-muted-foreground">
                         Reg closes: <span className="text-red-500 font-medium">
-                          {exam.regEndDate ? new Date(exam.regEndDate).toLocaleDateString() : "TBA"}
+                          {exam.regEndDate ? (() => {
+                              const d = new Date(exam.regEndDate);
+                              return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                          })() : "TBA"}
                         </span>
                       </p>
                     </div>
