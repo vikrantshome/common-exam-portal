@@ -17,7 +17,6 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
           <Link href="#features" className="hover:text-indigo-600 transition-colors">Features</Link>
           <Link href="/exams" className="hover:text-indigo-600 transition-colors">Exams</Link>
-          <Link href="#pricing" className="hover:text-indigo-600 transition-colors">Pricing</Link>
         </div>
 
         {/* Actions */}

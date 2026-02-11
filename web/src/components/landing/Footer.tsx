@@ -22,7 +22,6 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-slate-600">
               <li><Link href="/extension" className="hover:text-indigo-600">Extension</Link></li>
               <li><Link href="/exams" className="hover:text-indigo-600">Supported Exams</Link></li>
-              <li><Link href="/pricing" className="hover:text-indigo-600">Pricing</Link></li>
             </ul>
           </div>
 
